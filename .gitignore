@@ -1,0 +1,6 @@
+.cproject
+.project
+.tb_history
+novint_falcon-gnulinux.pc
+*.log
+src/CMakeFiles/*
