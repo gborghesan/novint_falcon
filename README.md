@@ -14,5 +14,6 @@ copy (as super-user) the file in this repository:
 udev_rule/99-udev-novint.rules -> /etc/udev/rules.d/99-udev-novint.rules
 
 authors:
--Gianni Borghesan
--Sergio Portolez
+
+- Gianni Borghesan
+- Sergio Portolez
