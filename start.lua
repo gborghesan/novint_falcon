@@ -23,5 +23,7 @@ local path=rtt_rospack_find("novint_falcon")
 depl:loadComponent("falcon_master", "Novint_falcon")
 falcon_master = depl:getPeer("falcon_master")
 falcon_master:getProperty("NoFalcon"):set(0)
+
+falcon_master:setPeriod(0.001)
 falcon_master:configure()
-falcon_master:setPeriod(0.1)
+falcon_master:start()

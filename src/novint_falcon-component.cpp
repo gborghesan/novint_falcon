@@ -14,16 +14,27 @@ Novint_falcon::Novint_falcon(std::string const& name) : TaskContext(name)
 	force[0]=0;
 	force[1]=0;
 	force[2]=0;
-    m_falconDevice.setFalconFirmware<FalconFirmwareNovintSDK>(); //Set Firmware
+	m_falconDevice.setFalconFirmware<FalconFirmwareNovintSDK>(); //Set Firmware
 	m_falconDevice.setFalconGrip<FalconGripFourButton>(); //Set Grip
-    m_falconDevice.setFalconKinematic<libnifalcon::FalconKinematicStamper>();
+	m_falconDevice.setFalconKinematic<libnifalcon::FalconKinematicStamper>();
 	f = m_falconDevice.getFalconFirmware();
 	grip= m_falconDevice.getFalconGrip();
 	force_in.resize(3);
 	pos_out.resize(3);
-	buttonOld=0;
-	buttonNew=0;
+	//buttonOld=0;
+	//buttonNew=0;
+	HowManyMiss=0;
+	addPort("force_inport",force_inport);
+	addPort("position_outport",position_outport);
+	//addPort("button_outport",button_outport);
+	//addPort("event_outport",event_outport);
+	calibrated=false;
+	addConstant("calibrated",calibrated);
+
+	m_displayCalibrationMessage=true;
+	red=true;y=0;
 } 
+
 
 
 
@@ -46,7 +57,7 @@ bool Novint_falcon::configureHook()
 	}
 	else
 		log( RTT::Info )<<"Falcon "<<NoFalcon<<" found"
-				<< RTT::endlog();
+		<< RTT::endlog();
 
 
 
@@ -63,12 +74,8 @@ bool Novint_falcon::configureHook()
 	{
 		init_firmware_loaded=false;
 		log( RTT::Info )<<"loading Firmware"<< RTT::endlog();
-		uint8_t* firmware_block;
-		long firmware_size;
 
-		firmware_block = const_cast<uint8_t*>(NOVINT_FALCON_NVENT_FIRMWARE);
-		firmware_size = NOVINT_FALCON_NVENT_FIRMWARE_SIZE;
-		for(int i = 0; i < 40; ++i)//try 20 times
+		for(int i = 1; i < 41; ++i)//try 20 times
 		{
 			if(!f->loadFirmware(true,
 					NOVINT_FALCON_NVENT_FIRMWARE_SIZE,
@@ -92,19 +99,45 @@ bool Novint_falcon::configureHook()
 		log( RTT::Error ) << "Cannot load firmware of falcon N "<<NoFalcon << RTT::endlog();
 		return false;
 	}
-	//m_falconDevice.setForce(force);
-	m_falconDevice.runIOLoop();
-	bool calib=calibrateDevice();
+	m_falconDevice.setForce(force);
+
+	f->setLEDStatus(libnifalcon::FalconFirmware::RED_LED|libnifalcon::FalconFirmware::BLUE_LED);
+	int iter=0;
+	while(!	m_falconDevice.runIOLoop())
+	{
+		usleep(50000);
+		log( RTT::Info ) <<"trying update: Error Code: " <<
+				m_falconDevice.getErrorCode() <<
+				" Device Error Code: " <<
+				m_falconDevice.getFalconComm()->getDeviceErrorCode()
+				<< RTT::endlog();
+		iter++;
+		if (iter>10)
+		{
+			log( RTT::Error ) <<"MISS 10 times: Error Code: " <<
+					m_falconDevice.getErrorCode() <<
+					" Device Error Code: " <<
+					m_falconDevice.getFalconComm()->getDeviceErrorCode()
+					<< RTT::endlog();
+		}
+	}
 
 	return true;
 }
 
 bool Novint_falcon::startHook(){
-	std::cout << "Novint_falcon started !" <<std::endl;
+	f->setLEDStatus(libnifalcon::FalconFirmware::GREEN_LED);
+	m_falconDevice.runIOLoop();
 	return true;
 }
 
 void Novint_falcon::updateHook(){
+
+	if(!calibrated)
+	{
+		calibrated=calibrateDevice();
+		return;
+	}
 	if(force_inport.read(force_in)==RTT::NoData)
 		std::fill(force_in.begin(),force_in.end(),0.0);
 	force[0]=force_in[0];	force[1]=force_in[1];	force[2]=force_in[2];
@@ -112,26 +145,70 @@ void Novint_falcon::updateHook(){
 	bool ok=m_falconDevice.runIOLoop();
 	if (!ok)
 	{
-		RTT::Logger::In in(this->getName());
-		log( RTT::Error )<<this->getName()<<" :runIOLoop failed"
-				<< RTT::endlog();
+		HowManyMiss++;
+		if(HowManyMiss==100)
+		{
+			RTT::Logger::In in(this->getName());
+			log( RTT::Error )<<this->getName()<<" :runIOLoop failed 100 in a row\n"
+					<<" Error Code: " <<
+					m_falconDevice.getErrorCode() <<
+					" Device Error Code: " <<
+					m_falconDevice.getFalconComm()->getDeviceErrorCode()
+					<< RTT::endlog();
+			this->stop();
+		}
+		return;
 	}
+	else HowManyMiss=0;
+
 	pos = m_falconDevice.getPosition();
 	pos_out[0]=pos[0];	pos_out[1]=pos[1];	pos_out[2]=pos[2];
-	buttonNew= grip->getDigitalInputs();
+
 	position_outport.write(pos_out);
+
+/* buttons works with too much jitter...
+ *
+	bool new_button_value;
+	new_button_value=grip->getDigitalInput(0);
+	if (new_button_value!=buttons[0])
+	{
+
+		cout<< "button plus changed from "<< buttons[0]<<" to "<< new_button_value<< endl;
+		buttons[0]=new_button_value;
+	}
+	//buttonOld=buttonNew;
+
+	buttonNew= grip->getDigitalInputs();
+	bool new_button_value;
 	if(buttonNew!=buttonOld)
+	{
 		button_outport.write(buttonNew);
-	buttonOld=buttonNew;
+		//cout<< "button  changed"<< endl;
+		new_button_value=grip->getDigitalInput(0);
+		//=buttonNew & libnifalcon::FalconGripFourButton::FORWARD_BUTTON;
+		if (new_button_value!=buttons[0])
+		{
+
+			cout<< "button plus changed from "<< buttons[0]<<" to "<< new_button_value<< endl;
+			buttons[0]=new_button_value;
+		}
+		buttonOld=buttonNew;
+	}
+*/
 
 
 }
 
 void Novint_falcon::stopHook() {
+	f->setLEDStatus(0);
+	calibrated=false;
+	m_falconDevice.runIOLoop();
 
 }
 
 void Novint_falcon::cleanupHook() {
+
+
 	m_falconDevice.close();
 
 }
@@ -151,46 +228,48 @@ bool Novint_falcon::calibrateDevice()
 {
 	if(f->isHomed())
 	{
-		//cout<<"Falcon already homed"<<endl;
+
 		return true;
 	}
 
-	bool m_displayCalibrationMessage=true;
+
 
 	f->setHomingMode(true);
 	m_falconDevice.runIOLoop();
 	bool ok=false;
 	f->setLEDStatus(libnifalcon::FalconFirmware::RED_LED);
-	for(int i=0; i<1000;i++)
+
+	y++;
+	if (y*getPeriod()>0.5)
+	{
+		y=0;
+		if (red) f->setLEDStatus(libnifalcon::FalconFirmware::RED_LED);
+		else     f->setLEDStatus(libnifalcon::FalconFirmware::BLUE_LED);
+		red=!red;
+	}
+
+
+	pos = m_falconDevice.getPosition();
+
+	if(!f->isHomed())
 	{
 
-
-		usleep(100000);
-		//cout<<"IOloop "<<m_falconDevice.runIOLoop()<<endl;
-
-		pos = m_falconDevice.getPosition();
-		//cout<<"iter "<<i<<"\t"<<pos[0]<<"\t"<<pos[1]<<"\t"<<pos[2]<<endl;
-		if(!f->isHomed())
+		if(m_displayCalibrationMessage)
 		{
-
-			if(m_displayCalibrationMessage)
-			{
-				log( RTT::Warning ) << "Falcon "<<this->getName()<<" not currently calibrated.\n "
-						"Move control all the way out then push straight all the way in."
-						<< RTT::endlog();
-				m_displayCalibrationMessage = false;
-			}
-			ok= false;
+			log( RTT::Warning ) << "Falcon "<<this->getName()<<" not currently calibrated.\n "
+					"Move control all the way out then push straight all the way in."
+					<< RTT::endlog();
+			m_displayCalibrationMessage = false;
 		}
-		else
-		{
-			log( RTT::Warning ) << "Falcon "<<this->getName()<<" currently calibrated.\n "
-						<< RTT::endlog();
-			f->setLEDStatus(libnifalcon::FalconFirmware::GREEN_LED);
+		ok= false;
+	}
+	else
+	{
+		log( RTT::Warning ) << "Falcon "<<this->getName()<<" currently calibrated.\n "
+				<< RTT::endlog();
+		f->setLEDStatus(libnifalcon::FalconFirmware::GREEN_LED);
 
-			ok= true;
-			break;
-		}
+		ok= true;
 	}
 	return ok;
 }

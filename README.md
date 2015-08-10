@@ -2,7 +2,7 @@
 
 
 ##Prerequisite##
-to compile you need to the driver [libnifalcon](https://github.com/qdot/libnifalcon).
+to compile you need the driver [libnifalcon](https://github.com/qdot/libnifalcon).
 follow the instructions there to compile and __install__.
 
 

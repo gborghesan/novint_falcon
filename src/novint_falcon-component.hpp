@@ -26,17 +26,27 @@ private:
 	FalconDevice m_falconDevice;
 
 	int NoFalcon;
+	int HowManyMiss;
 	boost::array<double, 3> force;
 	boost::array<double, 3> pos;
 
 	RTT::InputPort<std::vector<double> > force_inport;
 	RTT::OutputPort<std::vector<double> > position_outport;
-	RTT::OutputPort<int > button_outport;
+	//RTT::OutputPort<int > button_outport;
+	//RTT::OutputPort<std::string > event_outport;
 
 	std::vector<double> force_in;
 	std::vector<double> pos_out;
-	int buttonOld;
-	int buttonNew;
+	//int buttonOld;
+	//int buttonNew;
+	//bool buttons[4];
+
+	bool calibrated;
+
+
+	int y;
+	bool red;
+	bool m_displayCalibrationMessage;
 
 };
 #endif
