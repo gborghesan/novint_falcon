@@ -14,10 +14,10 @@ public:
 	void stopHook();
 	void cleanupHook();
 
-void masterEnable();
-void masterDisable();
-void slaveEnable();
-void slaveDisable();
+bool masterEnable();
+bool masterDisable();
+bool slaveEnable();
+bool slaveDisable();
 
 private:
 
