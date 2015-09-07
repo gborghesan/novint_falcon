@@ -24,6 +24,15 @@ depl:loadComponent("falcon_master", "Novint_falcon")
 falcon_master = depl:getPeer("falcon_master")
 falcon_master:getProperty("NoFalcon"):set(0)
 
+depl:loadComponent("controllerPP", "controller")
+controllerPP = depl:getPeer("controllerPP")
+
+
+
 falcon_master:setPeriod(0.001)
 falcon_master:configure()
 falcon_master:start()
+
+controllerPP:setPeriod(0.001)
+controllerPP:configure()
+controllerPP:start()
