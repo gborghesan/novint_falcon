@@ -1,0 +1,10 @@
+<list>
+<button name='----- On Configuration -----' event='e_dummy' tooltip='Tag: Calibration mode events'/>
+<button name='Start Operation' event='e_configured' tooltip='Start the Operative mode'/>
+<button name='------ On Operative ------' event='e_dummy' tooltip='Tag: Operative mode events'/>
+<button name='Stop Operation' event='e_configuration_required' tooltip='Re-enters configuration'/>
+<button name='--------------------------' event='e_dummy' tooltip='Tag: Other events'/>
+<button name='End Application' event='e_quit' tooltip='Terminates de application'/>
+<button name='---- Automatic events ----' event='e_dummy' tooltip='Tag: Automatic events'/>
+<button name='Others' event='e_other' tooltip='Does other things that should be automatic'/>
+</list>

@@ -1,0 +1,5 @@
+<launch>
+  <param name="xml_button_file_pkg" type="string" value="novint_falcon" />
+  <param name="xml_button_file" type="string" value="/xml/event_sender_falcon.xml" />
+  <node name="Event_Sender" pkg="python_gui" type="gui_sender.py" />
+</launch>
