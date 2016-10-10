@@ -20,15 +20,15 @@ public:
 	void cleanupHook();
 	bool calibrateDevice();
 private:
-	boost::shared_ptr<FalconFirmware> f;
-	boost::shared_ptr<FalconGrip> grip;
+	std::shared_ptr<FalconFirmware> f;
+	std::shared_ptr<FalconGrip> grip;
 
 	FalconDevice m_falconDevice;
 
 	int NoFalcon;
 	int HowManyMiss;
-	boost::array<double, 3> force;
-	boost::array<double, 3> pos;
+	std::array<double, 3> force;
+	std::array<double, 3> pos;
 
 	RTT::InputPort<std::vector<double> > force_inport;
 	RTT::OutputPort<std::vector<double> > position_outport;
