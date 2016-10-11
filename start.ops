@@ -1,9 +1,11 @@
 ########################################
 ## Using the standard orocos deployer ##
 
-##load the lua service
-loadService ("Deployer","Lua")
- 
-##execute your deployment file
-Lua.exec_file("start.lua")
+import("rtt_ros")
+ros.import("novint_falcon")
 
+loadComponent("falcon","Novint_falcon")
+
+
+stream("falcon.position_outport", ros.topic("position_outport"))
+stream("falcon.force_inport", ros.topic("force_inport"))

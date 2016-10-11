@@ -7,7 +7,7 @@ using namespace libnifalcon;
 using namespace std;
 using namespace RTT;
 
-Novint_falcon::Novint_falcon(std::string const& name) : TaskContext(name)
+Novint_falcon::Novint_falcon(std::string const& name) : TaskContext(name,PreOperational)
 , NoFalcon(0)
 {
 	addProperty("NoFalcon",NoFalcon);
@@ -19,8 +19,7 @@ Novint_falcon::Novint_falcon(std::string const& name) : TaskContext(name)
 	m_falconDevice.setFalconKinematic<libnifalcon::FalconKinematicStamper>();
 	f = m_falconDevice.getFalconFirmware();
 	grip= m_falconDevice.getFalconGrip();
-	force_in.resize(3);
-	pos_out.resize(3);
+
 	//buttonOld=0;
 	//buttonNew=0;
 	HowManyMiss=0;
@@ -33,7 +32,8 @@ Novint_falcon::Novint_falcon(std::string const& name) : TaskContext(name)
 
 	m_displayCalibrationMessage=true;
 	red=true;y=0;
-} 
+	position_outport.setDataSample(pos_out);
+}
 
 
 
@@ -41,6 +41,7 @@ Novint_falcon::Novint_falcon(std::string const& name) : TaskContext(name)
 
 bool Novint_falcon::configureHook()
 {
+
 
 
 	RTT::Logger::In in(this->getName());
@@ -139,8 +140,15 @@ void Novint_falcon::updateHook(){
 		return;
 	}
 	if(force_inport.read(force_in)==RTT::NoData)
-		std::fill(force_in.begin(),force_in.end(),0.0);
-	force[0]=force_in[0];	force[1]=force_in[1];	force[2]=force_in[2];
+	{
+		force_in.x=0;
+		force_in.y=0;
+		force_in.z=0;
+	}
+
+	force[0]=force_in.x;
+	force[1]=force_in.y;
+	force[2]=force_in.z;
 	m_falconDevice.setForce(force);
 	bool ok=m_falconDevice.runIOLoop();
 	if (!ok)
@@ -162,7 +170,9 @@ void Novint_falcon::updateHook(){
 	else HowManyMiss=0;
 
 	pos = m_falconDevice.getPosition();
-	pos_out[0]=pos[0];	pos_out[1]=pos[1];	pos_out[2]=pos[2];
+	pos_out.x=pos[0];
+	pos_out.y=pos[1];
+	pos_out.z=pos[2];
 
 	position_outport.write(pos_out);
 

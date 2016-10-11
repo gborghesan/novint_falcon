@@ -8,6 +8,7 @@
 #include "falcon/util/FalconFirmwareBinaryNvent.h"
 #include "falcon/grip/FalconGripFourButton.h"
 #include "falcon/kinematic/FalconKinematicStamper.h"
+#include "geometry_msgs/Vector3.h"
 
 using namespace libnifalcon;
 class Novint_falcon : public RTT::TaskContext{
@@ -30,13 +31,13 @@ private:
 	std::array<double, 3> force;
 	std::array<double, 3> pos;
 
-	RTT::InputPort<std::vector<double> > force_inport;
-	RTT::OutputPort<std::vector<double> > position_outport;
+	RTT::InputPort<geometry_msgs::Vector3 > force_inport;
+	RTT::OutputPort<geometry_msgs::Vector3 > position_outport;
 	//RTT::OutputPort<int > button_outport;
 	//RTT::OutputPort<std::string > event_outport;
 
-	std::vector<double> force_in;
-	std::vector<double> pos_out;
+	geometry_msgs::Vector3 force_in;
+	geometry_msgs::Vector3 pos_out;
 	//int buttonOld;
 	//int buttonNew;
 	//bool buttons[4];

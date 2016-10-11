@@ -25,6 +25,11 @@ endif()
 
 
 
+file(GLOB_RECURSE EXTRA_FILES package.xml *.ops *.lua cpf/* )
+add_custom_target(${PROJECT_NAME}_OTHER_FILES ALL WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} SOURCES ${EXTRA_FILES})
+
+
+
 # Use 'source orocos_toolchain/env.sh' if the command below fails:
 find_package(OROCOS-RTT QUIET)
 if (NOT OROCOS-RTT_FOUND)
